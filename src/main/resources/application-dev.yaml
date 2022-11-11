@@ -1,0 +1,13 @@
+files:
+  location: /tmp/dev/files
+
+quarkus:
+  http:
+    port: 8088
+  log:
+    level: INFO
+    console:
+      enable: true
+    file:
+      enable: true
+      path: /tmp/logs/dev/files-repository

@@ -1,0 +1,15 @@
+files:
+  location: /files
+
+quarkus:
+  # Only uncomment below for debugging integration tests with the @QuarkusIntegrationTest, since these run against the build
+  # Quarkus application jar: target/quarkus-app/quarkus-run.jar. For the tests to run, the application first needs to be build with maven.
+  #test:
+  #  arg-line: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5006'
+  log:
+    level: INFO
+    console:
+      enable: true
+    file:
+      enable: true
+      path: /tmp/logs/test/files-repository

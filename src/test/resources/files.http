@@ -1,0 +1,29 @@
+# Example of https://www.jetbrains.com/help/idea/exploring-http-syntax.html#use-multipart-form-data.
+# Above doesn't seem to work, but see ticket below:
+# https://youtrack.jetbrains.com/issue/IDEA-304322/HTTP-request-Multipart-not-working-with-Quarkus-application
+POST http://localhost:8088/v1/files
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="filename"
+
+FILE.20160919.152122.149067_output
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="FILE.20160919.152122.149067"
+
+< ./files/FILE.20160919.152122.149067
+--WebAppBoundary--
+
+###
+GET http://localhost:8088/v1/files/filename/FILE.20160919.152122.149067
+
+###
+GET http://localhost:8088/v1/files/key/120160212016-09-19%20%20%20%20%20%20%20%20%20%202016092999991231EUR
+
+###
+PUT http://localhost:8088/v1/files/status/120160212016-09-19%20%20%20%20%20%20%20%20%20%202016092999991231EUR
+Content-Type: text/plain
+
+PROCESSED
+
+###

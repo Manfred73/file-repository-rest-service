@@ -1,0 +1,153 @@
+openapi: 3.0.3
+info:
+  title: file-repository-rest-service
+  description: 'Rest Service for maintaining files in the file repository.'
+  version: 1.0.0
+servers:
+  - url: 'http://localhost:8080/v1'
+paths:
+  '/files':
+    post:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                filename:
+                  $ref: '#/components/schemas/filename'
+                file:
+                  type: string
+                  format: binary
+        required: true
+      summary: 'Send a file to the file repository to save it.'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileMetadataResult'
+  '/files/filename/{filename}':
+    get:
+      summary: 'Returns a file based on the given filename.'
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/filename'
+      responses:
+        '200':
+          description: 'The retrieved file'
+          content:
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/FileResult'
+  '/files/key/{key}':
+    get:
+      summary: 'Returns a file based on the given key (urlencoded).'
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/key'
+      responses:
+        '200':
+          description: 'The retrieved file'
+          content:
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/FileResult'
+  '/files/status/{key}':
+    put:
+      summary: 'Update the status of a file'
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/key'
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              $ref: '#/components/schemas/status'
+      responses:
+        '200':
+          description: 'Status update was successful'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileMetadataResult'
+components:
+  schemas:
+    FileMetadataResult:
+      required:
+        - result
+        - metadata
+        - errors
+      type: object
+      properties:
+        result:
+          description: 'If no errors true, else false.'
+          type: boolean
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+        errors:
+          $ref: '#/components/schemas/errors'
+    FileResult:
+      required:
+        - result
+        - file
+        - errors
+      type: object
+      properties:
+        result:
+          description: 'If no errors true, else false.'
+          type: boolean
+        file:
+          description: 'Retrieved file with content'
+          type: string
+          format: binary
+        errors:
+          $ref: '#/components/schemas/errors'
+    Metadata:
+      description: 'Metadata associated with the file.'
+      type: object
+      required:
+        - key
+        - status
+        - filename
+      properties:
+        key:
+          $ref: '#/components/schemas/key'
+        status:
+          $ref: '#/components/schemas/status'
+        filename:
+          $ref: '#/components/schemas/filename'
+    status:
+      type: string
+      enum: ["RECEIVED", "APPROVED", "REJECTED", "PROCESSED", "INCOMPLETELY_PROCESSED" ]
+      example: "RECEIVED"
+      description: |
+        The status of the file:
+        - RECEIVED: File has been received and saved;
+        - APPROVED: File has been successfully validated;
+        - REJECTED: File has not been successfully validated (end state);
+        - PROCESSED: File has been successfully processed;
+        - INCOMPLETELY_PROCESSED: File has not been successfully processed (end state).
+    key:
+      type: string
+      example: "120160212016-09-19          2016092999991231EUR"
+      description: 'The key of the file. These are the first 47 positions from the first line of the file'
+    filename:
+      type: string
+      example: "FILE.20160919.152122.149067"
+      description: 'The name of the file as it was saved'
+    errors:
+      description: 'A list of possible errors.'
+      type: array
+      items:
+        type: string

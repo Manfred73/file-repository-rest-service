@@ -1,0 +1,347 @@
+<?xml version="1.0"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>nl.craftsmen</groupId>
+	<artifactId>file-repository-rest-service</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
+
+	<properties>
+		<compiler-plugin.version>3.8.1</compiler-plugin.version>
+		<maven.compiler.release>17</maven.compiler.release>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<skipITs>true</skipITs>
+		<skipUTs>false</skipUTs>
+		<surefire-plugin.version>3.0.0-M7</surefire-plugin.version>
+
+		<!-- Quarkus versions -->
+		<version.quarkus.platform>2.12.3.Final</version.quarkus.platform>
+
+		<!-- Other dependency versions -->
+		<version.lombok>1.18.24</version.lombok>
+
+		<!-- Test versions -->
+		<version.archunit>1.0.0</version.archunit>
+		<version.assertj>3.23.1</version.assertj>
+		<version.pitest>1.9.9</version.pitest>
+		<version.pitest-junit5>1.1.0</version.pitest-junit5>
+	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>io.quarkus.platform</groupId>
+				<artifactId>quarkus-bom</artifactId>
+				<version>${version.quarkus.platform}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<!-- Quarkus dependencies -->
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-resteasy-reactive-jackson</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-arc</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-hibernate-validator</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-smallrye-health</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-config-yaml</artifactId>
+		</dependency>
+
+		<!-- Other dependencies -->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>${version.lombok}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+		</dependency>
+
+		<!-- Test dependencies -->
+
+		<!-- Test: Quarkus -->
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-junit5</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-junit5-mockito</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- Plugin in Intellij fails with errors: IllegalClassFormatException: Error while instrumenting.....
+			 See: https://stackoverflow.com/questions/69906908/jacoco-java-lang-instrument-illegalclassformatexception-error-while-instrumenti
+			 See: https://github.com/quarkusio/quarkus/issues/16358
+			 Not everything is showing 100% coverage in Intellij, although the generated reports in target folder look OK.
+		-->
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-jacoco</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Test: assertj matchers -->
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<version>${version.assertj}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Test: rest-assured -->
+		<dependency>
+			<groupId>io.rest-assured</groupId>
+			<artifactId>rest-assured</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Test: Pitest -->
+		<dependency>
+			<groupId>org.pitest</groupId>
+			<artifactId>pitest-parent</artifactId>
+			<version>${version.pitest}</version>
+			<type>pom</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.pitest</groupId>
+			<artifactId>pitest-junit5-plugin</artifactId>
+			<version>${version.pitest-junit5}</version>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
+
+	<build>
+
+		<finalName>${project.artifactId}</finalName>
+
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+
+		<pluginManagement>
+			<plugins>
+				<!--
+					The pitest don't run well: TIMED_OUT and RUN_ERROR occur.
+					The same configuration with Spring Boot projects work fine.
+					Issue on with pitest & Quarkus on GitHub: https://github.com/hcoles/pitest/issues/1072
+				-->
+				<plugin>
+					<groupId>org.pitest</groupId>
+					<artifactId>pitest-maven</artifactId>
+					<version>${version.pitest}</version>
+					<configuration>
+						<targetClasses>
+							<param>nl.craftsmen.*</param>
+						</targetClasses>
+						<targetTests>
+							<param>nl.craftsmen.*</param>
+						</targetTests>
+						<excludedClasses>
+							<!--
+							<param>nl.craftsmen.*.config.*</param>
+							<param>nl.craftsmen.*.SpringSecurityConfig*</param>
+							<param>nl.craftsmen.*.*Application</param>
+							-->
+						</excludedClasses>
+						<excludedMethods>
+							<param>close</param>
+							<param>flush</param>
+							<param>toBuilder</param>
+						</excludedMethods>
+						<!-- Options for aggregate reports. -->
+						<timestampedReports>false</timestampedReports>
+						<exportLineCoverage>true</exportLineCoverage>
+						<outputFormats>
+							<param>XML</param>
+							<param>HTML</param>
+						</outputFormats>
+						<!-- Thresholds at which the goal fails. -->
+						<mutationThreshold>80</mutationThreshold>
+						<coverageThreshold>80</coverageThreshold>
+						<!--- Optimilisations to make tests faster. -->
+						<threads>4</threads>
+						<mutationUnitSize>4</mutationUnitSize>
+						<timeoutConstant>8000</timeoutConstant>
+					</configuration>
+					<dependencies>
+						<dependency>
+							<groupId>org.pitest</groupId>
+							<artifactId>pitest-junit5-plugin</artifactId>
+							<version>${version.pitest-junit5}</version>
+						</dependency>
+					</dependencies>
+					<executions>
+						<execution>
+							<phase>test</phase>
+							<goals>
+								<goal>mutationCoverage</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+
+		<plugins>
+
+			<plugin>
+				<groupId>io.quarkus.platform</groupId>
+				<artifactId>quarkus-maven-plugin</artifactId>
+				<version>${version.quarkus.platform}</version>
+				<extensions>true</extensions>
+				<executions>
+					<execution>
+						<goals>
+							<goal>build</goal>
+							<goal>generate-code</goal>
+							<goal>generate-code-tests</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${compiler-plugin.version}</version>
+				<configuration>
+					<compilerArgs>
+						<arg>-parameters</arg>
+					</compilerArgs>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>${surefire-plugin.version}</version>
+				<configuration>
+					<skip>${skipUTs}</skip>
+					<argLine>-Xms512m -Xmx1024m -ea -Dfile.encoding=UTF-8</argLine>
+					<includes>
+						<include>**/Test*.java</include>
+						<include>**/*Test.java</include>
+						<include>**/*TestCase.java</include>
+						<include>**/*TestSuite.java</include>
+						<include>**/AllTests.java</include>
+					</includes>
+					<excludes>
+						<exclude>**/integration*/*.java</exclude>
+						<exclude>**/*IntegrationTest.java</exclude>
+						<exclude>**/*IT.java</exclude>
+						<exclude>**/*IgnoreAutoTest.java</exclude>
+					</excludes>
+					<systemPropertyVariables>
+						<java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+						<quarkus.log.level>INFO</quarkus.log.level>
+						<maven.home>${maven.home}</maven.home>
+					</systemPropertyVariables>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>${surefire-plugin.version}</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+						<configuration>
+							<skipITs>${skipITs}</skipITs>
+							<argLine>-Xms512m -Xmx1024m -ea -Dfile.encoding=UTF-8</argLine>
+							<includes>
+								<include>**/*IT.java</include>
+								<include>**/IT*.java</include>
+								<include>**/*ITCase.java</include>
+								<include>**/integration*/*.java</include>
+								<include>**/*IntegrationTest.java</include>
+							</includes>
+							<excludes>
+								<exclude>**/*IgnoreAutoTest.java</exclude>
+							</excludes>
+							<systemPropertyVariables>
+								<native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>
+								<java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+								<quarkus.log.level>INFO</quarkus.log.level>
+								<!--<quarkus.test.argLine>agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005</quarkus.test.argLine>-->
+								<!-- If your integration tests require a different profile, you can set that here as well.
+								<quarkus.test.native-image-profile>integration</quarkus.test.native-image-profile>
+								-->
+								<maven.home>${maven.home}</maven.home>
+							</systemPropertyVariables>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+		</plugins>
+
+	</build>
+
+	<profiles>
+
+		<profile>
+			<id>native</id>
+			<activation>
+				<property>
+					<name>native</name>
+				</property>
+			</activation>
+			<properties>
+				<skipITs>false</skipITs>
+				<quarkus.package.type>native</quarkus.package.type>
+			</properties>
+		</profile>
+
+		<profile>
+			<id>it</id>
+			<properties>
+				<skipITs>false</skipITs>
+				<skipUTs>true</skipUTs>
+			</properties>
+		</profile>
+
+		<profile>
+			<id>pit</id>
+			<properties>
+				<skipITs>true</skipITs>
+				<skipUTs>true</skipUTs>
+			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.pitest</groupId>
+						<artifactId>pitest-maven</artifactId>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
+	</profiles>
+
+</project>
